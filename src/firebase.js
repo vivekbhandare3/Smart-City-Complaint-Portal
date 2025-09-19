@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, serverTimestamp, arrayUnion } from "firebase/firestore";
 
 // Read configuration from environment variables
 export const firebaseConfig = {
@@ -30,3 +30,4 @@ try {
 // Export Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export { arrayUnion, serverTimestamp }; // Added serverTimestamp

@@ -1,14 +1,30 @@
-// src/AdminUpdateModal.js
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { arrayUnion } from './firebase';
+import { db } from './firebase';
 
 const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
   const [status, setStatus] = useState(complaint.status);
   const [assignedTo, setAssignedTo] = useState(complaint.assignedTo || '');
+  const [updateMessage, setUpdateMessage] = useState('');
+  const [admins, setAdmins] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "admins"), (snapshot) => {
+      setAdmins(snapshot.docs.map(doc => doc.data()));
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate(complaint.id, status, assignedTo);
+    const newUpdate = updateMessage ? {
+      message: updateMessage,
+      timestamp: new Date().toISOString(),
+      by: assignedTo || 'Admin'
+    } : null;
+    onUpdate(complaint.id, status, assignedTo, newUpdate);
+    setUpdateMessage('');
   };
 
   return (
@@ -27,13 +43,24 @@ const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
             </select>
           </div>
           <div>
-            <label className="block font-semibold mb-1 text-text-light">Assign To (Government Person)</label>
-            <input
-              type="text"
-              value={assignedTo}
-              onChange={e => setAssignedTo(e.target.value)}
+            <label className="block font-semibold mb-1 text-text-light">Assign To</label>
+            <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full border border-gray-300 p-2 rounded-lg">
+              <option value="">Unassigned</option>
+              {admins.map((admin, idx) => (
+                <option key={idx} value={`${admin.fullName || 'Unnamed'} (${admin.department})`}>
+                  {admin.fullName || 'Unnamed'} ({admin.department}) - {admin.position}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block font-semibold mb-1 text-text-light">Add Update (optional)</label>
+            <textarea
+              value={updateMessage}
+              onChange={e => setUpdateMessage(e.target.value)}
+              rows="3"
               className="w-full border border-gray-300 p-2 rounded-lg"
-              placeholder="Staff member name or department"
+              placeholder="e.g., Site inspected, repair scheduled for tomorrow."
             />
           </div>
           <div className="flex justify-end space-x-3 pt-4">

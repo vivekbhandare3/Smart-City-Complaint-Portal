@@ -3,6 +3,7 @@ import { StreetlightIcon, PotholeIcon, WasteIcon, WaterIcon, OtherIcon } from '.
 
 const ComplaintCard = ({ complaint, onCardClick, isAdmin = false }) => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const [showUpdates, setShowUpdates] = useState(false);
 
   const statusStyles = {
     Submitted: 'bg-red-100 text-red-800',
@@ -17,8 +18,8 @@ const ComplaintCard = ({ complaint, onCardClick, isAdmin = false }) => {
 
   const ImagePreviewModal = ({ imageUrl, onClose }) => (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={onClose}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-white text-3xl font-bold">&times;</button>
-        <img src={imageUrl} alt="Complaint full size" className="max-w-[90vw] max-h-[90vh]" />
+      <button onClick={onClose} className="absolute top-4 right-4 text-white text-3xl font-bold">&times;</button>
+      <img src={imageUrl} alt="Complaint full size" className="max-w-[90vw] max-h-[90vh]" loading="lazy" />
     </div>
   );
 
@@ -44,9 +45,29 @@ const ComplaintCard = ({ complaint, onCardClick, isAdmin = false }) => {
                 {complaint.imageUrls.map((url, index) => (
                   <img key={index} src={url} alt={`Complaint attachment ${index + 1}`}
                     className="h-16 w-16 object-cover rounded-md cursor-pointer hover:opacity-75 transition-opacity"
-                    onClick={(e) => { e.stopPropagation(); setSelectedImage(url); }} />
+                    onClick={(e) => { e.stopPropagation(); setSelectedImage(url); }} loading="lazy" />
                 ))}
               </div>
+            </div>
+          )}
+          {complaint.updates && complaint.updates.length > 0 && (
+            <div className="mt-4">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowUpdates(!showUpdates); }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {showUpdates ? 'Hide Updates' : `View Updates (${complaint.updates.length})`}
+              </button>
+              {showUpdates && (
+                <ul className="mt-2 space-y-2 text-sm text-text-light">
+                  {complaint.updates.map((update, idx) => (
+                    <li key={idx} className="border-t pt-2">
+                      <p><strong>By {update.by} on {new Date(update.timestamp?.toDate()).toLocaleString()}:</strong></p>
+                      <p>{update.message}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
         </div>
@@ -60,4 +81,5 @@ const ComplaintCard = ({ complaint, onCardClick, isAdmin = false }) => {
     </>
   );
 };
+
 export default ComplaintCard;
