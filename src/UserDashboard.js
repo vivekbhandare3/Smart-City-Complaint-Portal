@@ -40,7 +40,7 @@ const UserDashboard = ({ user }) => {
             {complaints.map(c => <ComplaintCard key={c.id} complaint={c} />)}
           </div>
         ) : (
-          !showForm && <div className="text-center py-20 bg-white rounded-xl shadow-md">
+          !showForm && <div className="text-center py-20 bg-white rounded-xl shadow-md border">
             <h3 className="text-xl font-semibold text-text-main">You haven't filed any complaints yet.</h3>
             <p className="text-text-light mt-2">Click 'File New Complaint' to get started.</p>
           </div>

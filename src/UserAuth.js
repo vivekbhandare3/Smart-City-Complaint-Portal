@@ -24,7 +24,7 @@ const UserAuth = ({ onLogin, onSignup, error, setError, onSwitchToGov }) => {
   return (
     <div className="flex items-center justify-center min-h-[85vh]">
       <div className="w-full max-w-md">
-        <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-gray-200">
+        <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-gray-100">
           <h2 className="text-3xl font-bold mb-2 text-center text-text-main">
             {view === 'login' ? 'Citizen Portal' : 'Create an Account'}
           </h2>

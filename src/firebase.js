@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, serverTimestamp, arrayUnion } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // Import Firebase Storage
 
 // Read configuration from environment variables
 export const firebaseConfig = {
@@ -23,11 +24,13 @@ try {
   } else {
     console.error("🔥🔥🔥 Firebase config is missing. Please check your .env file.");
   }
-} catch (error) {
+} catch (error)
+{
   console.error("🔥🔥🔥 Firebase initialization error:", error);
 }
 
 // Export Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export { arrayUnion, serverTimestamp }; // Added serverTimestamp
+export const storage = getStorage(app); // Export storage instance
+export { arrayUnion, serverTimestamp };

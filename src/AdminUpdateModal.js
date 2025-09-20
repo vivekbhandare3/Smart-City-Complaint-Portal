@@ -18,12 +18,7 @@ const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newUpdate = updateMessage ? {
-      message: updateMessage,
-      timestamp: new Date().toISOString(),
-      by: assignedTo || 'Admin'
-    } : null;
-    onUpdate(complaint.id, status, assignedTo, newUpdate);
+    onUpdate(complaint.id, status, assignedTo, updateMessage);
     setUpdateMessage('');
   };
 
@@ -72,7 +67,7 @@ const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
              <h4 className="font-bold text-md text-text-main mb-2">Update Status & Assignment</h4>
             <div>
               <label className="block font-semibold mb-1 text-text-light">Status</label>
-              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full border border-gray-300 p-2 rounded-lg">
+              <select value={status} onChange={e => setStatus(e.target.value)} className="w-full border bg-gray-50 border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-primary">
                 <option>Submitted</option>
                 <option>In Progress</option>
                 <option>Resolved</option>
@@ -80,7 +75,7 @@ const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
             </div>
             <div>
               <label className="block font-semibold mb-1 text-text-light">Assign To</label>
-              <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full border border-gray-300 p-2 rounded-lg">
+              <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} className="w-full border bg-gray-50 border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-primary">
                 <option value="">Unassigned</option>
                 {admins.map((admin, idx) => (
                   <option key={idx} value={`${admin.fullName || 'Unnamed'} (${admin.department})`}>
@@ -95,7 +90,7 @@ const AdminUpdateModal = ({ complaint, onClose, onUpdate }) => {
                 value={updateMessage}
                 onChange={e => setUpdateMessage(e.target.value)}
                 rows="3"
-                className="w-full border border-gray-300 p-2 rounded-lg"
+                className="w-full border bg-gray-50 border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-primary"
                 placeholder="e.g., Site inspected, repair scheduled for tomorrow."
               />
             </div>

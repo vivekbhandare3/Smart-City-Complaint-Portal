@@ -10,51 +10,78 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+// A simple SVG icon for the location button
+const LocationIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+);
+
+
 const LocationPicker = ({ value, onChange, className }) => {
-  const [center, setCenter] = useState({ lat: 37.7749, lng: -122.4194 }); // Default: San Francisco
-  const [position, setPosition] = useState(center); // Marker position
+  const [center, setCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // Default: Center of India
+  const [position, setPosition] = useState(null); // Marker position, null initially
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const apiKey = process.env.REACT_APP_LOCATIONIQ_API_KEY;
-  const baseUrl = 'https://us1.locationiq.com/v1'; // Change to 'eu1' if needed
+  const [geoError, setGeoError] = useState('');
+  const apiKey = process.env.REACT_APP_GEOAPIFY_API_KEY;
 
-  // Reverse Geocode (lat/lng to address)
+  // Reverse Geocode (lat/lng to address) using Geoapify
   const reverseGeocode = useCallback(async (latLng) => {
-    if (!apiKey) return; // Early return if no API key
+    if (!apiKey) return;
     setLoading(true);
+    setGeoError('');
     try {
-      const url = `${baseUrl}/reverse.php?key=${apiKey}&lat=${latLng.lat}&lon=${latLng.lng}&format=json&addressdetails=1`;
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${latLng.lat}&lon=${latLng.lng}&apiKey=${apiKey}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('Reverse geocoding failed');
       const data = await res.json();
-      if (data && data.display_name) {
-        onChange({ address: data.display_name, lat: latLng.lat, lng: latLng.lng });
+      if (data.features && data.features.length > 0) {
+        const address = data.features[0].properties.formatted;
+        onChange({ address: address, lat: latLng.lat, lng: latLng.lng });
+        setSearchQuery(address);
+      } else {
+        throw new Error("Could not find address for this location.");
       }
     } catch (err) {
       console.error('Reverse geocode error:', err);
+      setGeoError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [apiKey, baseUrl, onChange]);
+  }, [apiKey, onChange]);
 
-  // Option 1: Auto-fetch current location
-  useEffect(() => {
+  // Handler for the "Use My Current Location" button
+  const handleCurrentLocationClick = () => {
+    setGeoError('');
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setCenter(newPos);
-          setPosition(newPos);
-          await reverseGeocode(newPos);
-        },
-        (err) => console.warn('Geolocation denied:', err),
-        { enableHighAccuracy: true }
-      );
+        setLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                setPosition(newPos);
+                reverseGeocode(newPos); // This will also setLoading(false) and update parent state
+            },
+            (err) => {
+                setLoading(false);
+                if (err.code === 1) {
+                    setGeoError('Permission denied. Please allow location access in your browser settings.');
+                } else {
+                    setGeoError('Could not get your location. Please try searching manually.');
+                }
+                console.warn('Geolocation error:', err);
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    } else {
+        setGeoError('Geolocation is not supported by your browser.');
     }
-  }, [reverseGeocode]); // Added reverseGeocode to deps
+  };
 
-  // Option 3: Forward Geocoding (search)
+
+  // Forward Geocoding (search) using Geoapify Autocomplete
   const handleSearch = useCallback(async (query) => {
     if (!apiKey || query.length < 3) {
       setSearchResults([]);
@@ -62,131 +89,142 @@ const LocationPicker = ({ value, onChange, className }) => {
     }
     setLoading(true);
     try {
-      const url = `${baseUrl}/search.php?key=${apiKey}&q=${encodeURIComponent(query)}&format=json&limit=5`;
+      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&limit=5`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('Search failed');
       const data = await res.json();
-      setSearchResults(data || []);
+      setSearchResults(data.features || []);
     } catch (err) {
       console.error('Search error:', err);
       setSearchResults([]);
     } finally {
       setLoading(false);
     }
-  }, [apiKey, baseUrl]);
+  }, [apiKey]);
 
+  // Handle selecting a search result
   const handleSelectResult = useCallback((result) => {
-    const newPos = { lat: parseFloat(result.lat), lng: parseFloat(result.lon) };
-    setCenter(newPos);
+    const { lat, lon, formatted } = result.properties;
+    const newPos = { lat: parseFloat(lat), lng: parseFloat(lon) };
     setPosition(newPos);
-    setSearchQuery(result.display_name);
+    setSearchQuery(formatted);
     setSearchResults([]);
-    onChange({ address: result.display_name, lat: newPos.lat, lng: newPos.lng });
+    onChange({ address: formatted, lat: newPos.lat, lng: newPos.lng });
   }, [onChange]);
-
-  // "Use Current Location" button handler
-  const handleCurrentLocation = useCallback(async () => {
-    if (!apiKey || !navigator.geolocation) return;
-    try {
-      const pos = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true })
-      );
-      const newPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      setCenter(newPos);
-      setPosition(newPos);
-      await reverseGeocode(newPos);
-    } catch (err) {
-      console.warn('Geolocation error:', err);
-    }
-  }, [apiKey, reverseGeocode]);
 
   // Debounced search on input change
   useEffect(() => {
-    const timer = setTimeout(() => handleSearch(searchQuery), 300);
+    const timer = setTimeout(() => {
+        // Only search if the query is different from the already set address
+        if(searchQuery && searchQuery !== value.address) {
+            handleSearch(searchQuery)
+        } else {
+            setSearchResults([]);
+        }
+    }, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery, handleSearch, value.address]);
 
-  // Update from prop
-  useEffect(() => {
-    if (value.lat && value.lng) {
-      setCenter({ lat: value.lat, lng: value.lng });
-      setPosition({ lat: value.lat, lng: value.lng });
-    }
-  }, [value]);
-
-  // Option 2: Draggable marker events
-  const MapEvents = () => {
-    useMapEvents({
+  // Component to handle map interactions
+  const MapController = () => {
+    const map = useMapEvents({
       click: (e) => {
         const newPos = e.latlng;
         setPosition(newPos);
         reverseGeocode(newPos);
       },
-      dragend: () => reverseGeocode(position), // On marker drag end
     });
+
+    useEffect(() => {
+        if(position) {
+            map.flyTo(position, 15); // Animate map to new position
+        }
+    }, [position, map]);
+
     return null;
   };
+  
+  // Draggable Marker Component
+  const DraggableMarker = () => {
+    const markerRef = React.useRef(null);
+    const eventHandlers = React.useMemo(() => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker != null) {
+          const newPos = marker.getLatLng();
+          setPosition(newPos);
+          reverseGeocode(newPos);
+        }
+      },
+    }), [reverseGeocode]);
 
-  // Render error if no API key
+    return (
+      <Marker
+        draggable={true}
+        eventHandlers={eventHandlers}
+        position={position}
+        ref={markerRef}
+      />
+    );
+  };
+
   if (!apiKey) {
-    return <div className={className + ' p-3 text-red-500'}>LocationIQ API key missing. Add REACT_APP_LOCATIONIQ_API_KEY to .env.</div>;
+    return <div className={className + ' p-3 text-red-500 bg-red-50 rounded-lg'}>Geoapify API key is missing. Add REACT_APP_GEOAPIFY_API_KEY to your .env file.</div>;
   }
 
   return (
     <div className={className}>
-      {/* Option 3: Manual Search Input */}
-      <input
-        type="text"
-        placeholder="Search for address or location..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded-lg mb-2"
-        disabled={loading}
-      />
+        <div className="flex flex-col sm:flex-row gap-2 mb-2">
+            <input
+                type="text"
+                placeholder="Search for an address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                disabled={loading}
+            />
+             <button
+                type="button"
+                onClick={handleCurrentLocationClick}
+                disabled={loading}
+                className="flex items-center justify-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                <LocationIcon />
+                <span>{loading ? 'Locating...' : 'My Location'}</span>
+            </button>
+        </div>
+        
       {searchResults.length > 0 && (
-        <ul className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg mb-2 bg-white">
-          {searchResults.map((result, idx) => (
+        <ul className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg mb-2 bg-white z-10 shadow-md">
+          {searchResults.map((result) => (
             <li
-              key={idx}
+              key={result.properties.place_id}
               onClick={() => handleSelectResult(result)}
               className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
             >
-              {result.display_name}
+              {result.properties.formatted}
             </li>
           ))}
         </ul>
       )}
 
-      {/* Option 2: Interactive Map */}
-      <MapContainer
-        center={center}
-        zoom={15}
-        style={{ height: '200px', width: '100%' }}
-        className="rounded-lg mb-2"
-      >
-        <TileLayer
-          url={`https://tiles.locationiq.com/v3/leaflet/{z}/{x}/{y}.png?key=${apiKey}`}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://locationiq.com">LocationIQ</a>'
-        />
-        <Marker position={position} draggable>
-          <MapEvents />
-        </Marker>
-      </MapContainer>
+      {geoError && <p className="text-sm text-red-600 mb-2">{geoError}</p>}
 
-      {/* Display Selected Address */}
-      {value.address && (
-        <p className="text-sm text-gray-600 mt-1">Selected: {value.address}</p>
-      )}
-
-      {/* Option 1: Use Current Location Button */}
-      <button
-        type="button"
-        onClick={handleCurrentLocation}
-        disabled={loading}
-        className="text-xs text-blue-600 underline mt-1 hover:text-blue-800"
-      >
-        {loading ? 'Loading...' : 'Use Current Location (GPS)'}
-      </button>
+      <div className="h-[250px] w-full rounded-lg mb-2 z-0 bg-gray-200 text-gray-500 flex items-center justify-center overflow-hidden">
+        <MapContainer
+            center={center}
+            zoom={5}
+            style={{ height: '100%', width: '100%' }}
+            className="rounded-lg"
+        >
+            <TileLayer
+            url={`https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${apiKey}`}
+            attribution='Powered by <a href="https://www.geoapify.com/" target="_blank">Geoapify</a> | © <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+            />
+            {position && <DraggableMarker />}
+            <MapController />
+        </MapContainer>
+      </div>
     </div>
   );
 };

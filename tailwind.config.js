@@ -6,18 +6,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'primary': 'var(--primary)',
-        'primary-hover': 'var(--primary-hover)',
-        'secondary': 'var(--secondary)',
-        'accent': 'var(--accent)',
-        'text-main': 'var(--text-main)',
-        'text-light': 'var(--text-light)',
-        'status-submitted': 'var(--status-submitted)',
-        'status-progress': 'var(--status-progress)',
-        'status-resolved': 'var(--status-resolved)',
+        // Eco-friendly green color palette
+        'primary': '#059669', // Emerald 600
+        'primary-hover': '#047857', // Emerald 700
+        'secondary': '#F0FDF4', // Green 50
+        'accent': '#10B981', // Emerald 500
+        'text-main': '#111827', // Gray 900
+        'text-light': '#6B7280', // Gray 500
+        'status-submitted': '#EF4444', // Red 500
+        'status-progress': '#F59E0B', // Amber 500
+        'status-resolved': '#10B981', // Emerald 500
       },
       fontFamily: {
-        'sans': ['Poppins', 'sans-serif'],
+        'sans': ['Poppins', 'system-ui', 'sans-serif'],
       },
     },
   },

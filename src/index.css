@@ -5,15 +5,18 @@
 @tailwind utilities;
 
 :root {
-  --primary: #005A9C;
-  --primary-hover: #004B80;
-  --secondary: #F0F4F8;
-  --accent: #F5A623;
-  --text-main: #1F2937;
-  --text-light: #6B7280;
-  --status-submitted: #EF4444; /* Red */
-  --status-progress: #F59E0B; /* Amber */
-  --status-resolved: #10B981; /* Green */
+  /* Eco-Friendly Green Color Palette */
+  --primary: #059669; /* Emerald 600 - Main eco-friendly green */
+  --primary-hover: #047857; /* Emerald 700 - Darker green for hover states */
+  --secondary: #F0FDF4; /* Green 50 - Very light green background */
+  --accent: #10B981; /* Emerald 500 - Brighter accent green */
+  --text-main: #111827; /* Gray 900 - Dark text */
+  --text-light: #6B7280; /* Gray 500 - Light text */
+
+  /* Status colors remain intuitive but use green-friendly palette */
+  --status-submitted: #EF4444; /* Red 500 - Still red for submitted/urgent */
+  --status-progress: #F59E0B; /* Amber 500 - Still amber for in progress */
+  --status-resolved: #10B981; /* Emerald 500 - Green for resolved (matches accent) */
 }
 
 body {
@@ -24,9 +27,10 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--secondary);
+  color: var(--text-main);
 }
 
-/* Custom scrollbar for a cleaner look */
+/* Custom scrollbar for a cleaner look with green accent */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -34,9 +38,9 @@ body {
   background: #f1f1f1;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c5c5c5;
+  background: var(--primary);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
+  background: var(--primary-hover);
+} 

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { collection, query, onSnapshot, updateDoc, doc } from 'firebase/firestore';
-import { arrayUnion, serverTimestamp } from './firebase';
+import React, { useState, useEffect } from 'react';// New, more direct import
+import { collection, query, onSnapshot, updateDoc, doc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import ComplaintCard from './ComplaintCard';
 import AdminUpdateModal from './AdminUpdateModal';
 import { db } from './firebase';
@@ -42,13 +41,23 @@ const AdminDashboard = () => {
     setFilteredComplaints(filtered);
   }, [searchTerm, statusFilter, categoryFilter, complaints]);
 
-  const handleUpdate = async (id, status, assignedTo, newUpdate) => {
+  const handleUpdate = async (id, status, assignedTo, updateMessage) => {
     const complaintRef = doc(db, "complaints", id);
     try {
       const updateData = { status, assignedTo };
-      if (newUpdate) {
-        updateData.updates = arrayUnion({ ...newUpdate, timestamp: serverTimestamp() });
+      
+      if (updateMessage) {
+        const newUpdateObject = {
+          message: updateMessage,
+          by: assignedTo || 'Admin',
+          timestamp: serverTimestamp()
+        };
+        updateData.updates = arrayUnion(newUpdateObject);
       }
+      
+      // --- ADD THIS LINE FOR DEBUGGING ---
+      console.log("Attempting to update complaint with ID:", id, "Data:", updateData);
+
       await updateDoc(complaintRef, updateData);
       setSelectedComplaint(null);
     } catch (err) {
@@ -64,22 +73,22 @@ const AdminDashboard = () => {
         <h1 className="text-3xl font-bold text-text-main">Admin Dashboard</h1>
         <p className="mt-1 text-text-light">View and manage all user-submitted complaints.</p>
       </div>
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 flex flex-col md:flex-row gap-4 p-4 bg-white rounded-xl border">
         <input
           type="text"
           placeholder="Search by title, description, or location..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="flex-1 p-2 border border-gray-300 rounded-lg"
+          className="flex-1 p-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
         />
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-2 border border-gray-300 rounded-lg">
-          <option>All Statuses</option>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="p-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+          <option value="All">All Statuses</option>
           <option>Submitted</option>
           <option>In Progress</option>
           <option>Resolved</option>
         </select>
-        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="p-2 border border-gray-300 rounded-lg">
-          <option>All Categories</option>
+        <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="p-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary">
+          <option value="All">All Categories</option>
           <option>Streetlight</option>
           <option>Pothole</option>
           <option>Waste Management</option>

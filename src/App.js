@@ -5,6 +5,7 @@ import { auth, db, isConfigPlaceholder, firebaseConfig } from './firebase';
 import Header from './Header';
 import LoadingScreen from './LoadingScreen';
 import FirebaseConfigError from './FirebaseConfigError';
+
 import AdminDashboard from './AdminDashboard';
 import UserDashboard from './UserDashboard';
 import UserAuth from './UserAuth';
@@ -17,7 +18,7 @@ export default function App() {
   const [authType, setAuthType] = useState('user');
   const [error, setError] = useState('');
 
-  const GOVERNMENT_DOMAIN = '@gov.example';
+  const GOVERNMENT_DOMAIN = '@gov.com';
 
   useEffect(() => {
     if (isConfigPlaceholder(firebaseConfig)) {
