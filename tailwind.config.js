@@ -5,16 +5,19 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
       colors: {
-        'primary': '#0052cc', // A strong, professional blue
-        'primary-hover': '#0041a3',
-        'secondary': '#f8f9fa',
-        'accent': '#007bff',
-        'text-main': '#172b4d',
-        'text-light': '#5e6c84',
+        'primary': 'var(--primary)',
+        'primary-hover': 'var(--primary-hover)',
+        'secondary': 'var(--secondary)',
+        'accent': 'var(--accent)',
+        'text-main': 'var(--text-main)',
+        'text-light': 'var(--text-light)',
+        'status-submitted': 'var(--status-submitted)',
+        'status-progress': 'var(--status-progress)',
+        'status-resolved': 'var(--status-resolved)',
+      },
+      fontFamily: {
+        'sans': ['Poppins', 'sans-serif'],
       },
     },
   },

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { addDoc, collection, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { StreetlightIcon, PotholeIcon, WasteIcon, WaterIcon, OtherIcon } from './Icons';
 import LocationPicker from './LocationPicker';
+import imageCompression from 'browser-image-compression';
 
 const ComplaintForm = ({ user, onComplaintSubmitted }) => {
   const [title, setTitle] = useState('');
@@ -21,47 +22,48 @@ const ComplaintForm = ({ user, onComplaintSubmitted }) => {
     { name: 'Other', icon: <OtherIcon /> },
   ];
 
-  // NEW: Cloudinary upload function (unsigned preset; create 'complaints' preset in Cloudinary Dashboard)
-  const uploadToCloudinary = async (imageFile) => {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-    formData.append('upload_preset', 'complaints'); // Unsigned preset name (set in Cloudinary settings)
-    formData.append('cloud_name', process.env.REACT_APP_CLOUDINARY_CLOUD_NAME);
-    formData.append('folder', 'complaints'); // Optional: Organize in folder
-    try {
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        { method: 'POST', body: formData }
-      );
-      if (!response.ok) throw new Error('Upload failed');
-      const data = await response.json();
-      return data.secure_url; // Returns secure HTTPS URL
-    } catch (err) {
-      console.error('Cloudinary upload error:', err);
-      throw err;
-    }
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 5) {
+      setError('You can upload a maximum of 5 images.');
+      return;
+    }
+    setImages(files);
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !description || !location.address || !category || location.lat === null || location.lng === null) {
       setError('Please fill out all fields, including selecting a location.');
       return;
     }
-    if (images.length > 5) {
-      setError('You can upload a maximum of 5 images.');
-      return;
-    }
-    for (const image of images) {
-      if (image.size > 10 * 1024 * 1024) { // Cloudinary free tier: 10MB
-        setError('Each image must be under 10MB.');
-        return;
-      }
-    }
     setSubmitting(true);
     setError('');
+
     try {
-      const docRef = await addDoc(collection(db, "complaints"), {
+      const compressionOptions = {
+        maxSizeMB: 0.15, // Compress each image to be under 150KB
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      };
+
+      const imageProcessingPromises = images.map(async (file) => {
+        const compressedFile = await imageCompression(file, compressionOptions);
+        return await convertFileToBase64(compressedFile);
+      });
+      
+      const base64Images = await Promise.all(imageProcessingPromises);
+
+      await addDoc(collection(db, "complaints"), {
         userId: user.uid,
         userEmail: user.email,
         title,
@@ -74,15 +76,8 @@ const ComplaintForm = ({ user, onComplaintSubmitted }) => {
         createdAt: serverTimestamp(),
         assignedTo: null,
         updates: [],
-        imageUrls: []
+        imageUrls: base64Images,
       });
-
-      let imageUrls = [];
-      if (images.length > 0) {
-        const uploadPromises = images.map(async (image) => await uploadToCloudinary(image));
-        imageUrls = await Promise.all(uploadPromises);
-        await updateDoc(docRef, { imageUrls });
-      }
 
       onComplaintSubmitted();
       setTitle('');
@@ -92,7 +87,7 @@ const ComplaintForm = ({ user, onComplaintSubmitted }) => {
       setImages([]);
     } catch (err) {
       console.error('Error submitting complaint:', err);
-      setError('Failed to submit complaint. ' + (err.message.includes('Upload failed') ? 'Image upload failed, but complaint saved without images.' : ''));
+      setError('Failed to submit complaint. The images may be too large or there was a network error.');
     } finally {
       setSubmitting(false);
     }
@@ -150,12 +145,12 @@ const ComplaintForm = ({ user, onComplaintSubmitted }) => {
           ></textarea>
         </div>
         <div>
-          <label className="block text-sm font-bold text-text-light mb-2">5. Attach Images (optional, max 5, under 10MB each)</label>
+          <label className="block text-sm font-bold text-text-light mb-2">5. Attach Images (optional, max 5)</label>
           <input
             type="file"
             multiple
             accept="image/*"
-            onChange={e => setImages(Array.from(e.target.files))}
+            onChange={handleImageChange}
             className="w-full p-3 border border-gray-300 rounded-lg"
           />
         </div>

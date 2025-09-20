@@ -1,11 +1,42 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'leaflet/dist/leaflet.css';
+
+:root {
+  --primary: #005A9C;
+  --primary-hover: #004B80;
+  --secondary: #F0F4F8;
+  --accent: #F5A623;
+  --text-main: #1F2937;
+  --text-light: #6B7280;
+  --status-submitted: #EF4444; /* Red */
+  --status-progress: #F59E0B; /* Amber */
+  --status-resolved: #10B981; /* Green */
+}
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: #f8f9fa;
+  margin: 0;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--secondary);
+}
+
+/* Custom scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c5c5c5;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

@@ -14,12 +14,8 @@ const GovAuth = ({ onLogin, onSignup, error, setError, onSwitchToUser }) => {
     if (view === 'login') {
       onLogin(email, password, 'admin');
     } else {
-      if (!department) {
-        setError('Please select a department.');
-        return;
-      }
-      if (!fullName || !phone || !position) {
-        setError('Please fill all admin details.');
+      if (!department || !fullName || !phone || !position) {
+        setError('Please fill all registration details.');
         return;
       }
       onSignup(email, password, 'admin', department, fullName, phone, position);
@@ -38,84 +34,81 @@ const GovAuth = ({ onLogin, onSignup, error, setError, onSwitchToUser }) => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
+    <div className="flex items-center justify-center min-h-[85vh]">
       <div className="w-full max-w-md">
-        <div className="bg-white p-8 md:p-10 rounded-xl shadow-2xl">
-          <h2 className="text-3xl font-bold mb-6 text-center text-text-main">
-            {view === 'login' ? 'Government Portal Access' : 'Government Registration'}
+        <div className="bg-white p-8 md:p-10 rounded-2xl shadow-xl border border-gray-200">
+          <h2 className="text-3xl font-bold mb-2 text-center text-text-main">
+            {view === 'login' ? 'Government Portal' : 'Government Registration'}
           </h2>
+          <p className="text-center text-text-light mb-8">
+            {view === 'login' ? 'Authorized personnel access only.' : 'Register for an official account.'}
+          </p>
+
           {error && <p className="bg-red-100 text-red-700 p-3 rounded-md mb-4 text-sm">{error}</p>}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email-input" className="block text-sm font-bold text-text-light mb-2">Government Email</label>
+              <label className="block text-sm font-medium text-text-light mb-2">Government Email</label>
               <input
-                id="email-input"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                 placeholder="e.g., admin@gov.example"
                 required
               />
-              {view === 'signup' && (
-                <p className="text-xs text-text-light mt-1">Must end with @gov.example</p>
-              )}
             </div>
             <div>
-              <label htmlFor="password-input" className="block text-sm font-bold text-text-light mb-2">Password</label>
+              <label className="block text-sm font-medium text-text-light mb-2">Password</label>
               <input
-                id="password-input"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                 required
               />
             </div>
             {view === 'signup' && (
               <>
-                <div>
-                  <label htmlFor="fullName-input" className="block text-sm font-bold text-text-light mb-2">Full Name</label>
-                  <input
-                    id="fullName-input"
-                    type="text"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-light mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={e => setFullName(e.target.value)}
+                      className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-light mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value)}
+                      className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label htmlFor="phone-input" className="block text-sm font-bold text-text-light mb-2">Phone Number</label>
+                  <label className="block text-sm font-medium text-text-light mb-2">Position / Title</label>
                   <input
-                    id="phone-input"
-                    type="tel"
-                    value={phone}
-                    onChange={e => setPhone(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="position-input" className="block text-sm font-bold text-text-light mb-2">Position/Title</label>
-                  <input
-                    id="position-input"
                     type="text"
                     value={position}
                     onChange={e => setPosition(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                    className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                     placeholder="e.g., City Engineer"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="department-input" className="block text-sm font-bold text-text-light mb-2">Department</label>
+                  <label className="block text-sm font-medium text-text-light mb-2">Department</label>
                   <select
-                    id="department-input"
                     value={department}
                     onChange={e => setDepartment(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg"
                     required
                   >
                     <option value="">Select Department</option>
@@ -128,21 +121,22 @@ const GovAuth = ({ onLogin, onSignup, error, setError, onSwitchToUser }) => {
                 </div>
               </>
             )}
-            <button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:scale-105">
-              {view === 'login' ? 'Government Login' : 'Register Admin'}
+            <button type="submit" className="w-full bg-accent hover:bg-yellow-500 text-white font-bold py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md">
+              {view === 'login' ? 'Login' : 'Register Admin'}
             </button>
           </form>
+
           <p className="mt-6 text-center text-sm text-text-light">
             {view === 'login' ? "New to the portal?" : "Already registered?"}
-            <button onClick={handleViewChange} className="ml-2 text-green-600 hover:underline font-bold">
+            <button onClick={handleViewChange} className="ml-1 text-primary hover:underline font-semibold">
               {view === 'login' ? 'Register' : 'Login'}
             </button>
           </p>
-          <p className="mt-4 text-center text-sm text-text-light">
-            <button onClick={onSwitchToUser} className="text-blue-600 hover:underline">
-              Login as Normal User Instead
+          <div className="mt-4 pt-4 border-t text-center">
+            <button onClick={onSwitchToUser} className="text-sm text-text-light hover:text-primary hover:underline transition-colors">
+              Access the Citizen Portal
             </button>
-          </p>
+          </div>
         </div>
       </div>
     </div>
